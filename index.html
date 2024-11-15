@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Module 3 | Visual Libraries | PixiJS</title>
+</head>
+
+<body>
+  <game id="game"></game>
+  <script src="https://pixijs.download/release/pixi.min.js"></script>
+  <script type="module">
+
+    // Adjust the settings here
+    const config = {
+      screenWidth: 400,
+      screenHeight: 400,
+      circleSize: 10,
+      borderWidth: 10,
+    }
+
+    const app = new PIXI.Application();
+
+    await app.init({
+      backgroundColor: "#3398b9",
+      width: config.screenWidth,
+      height: config.screenHeight
+    });
+
+    document.getElementById('game').appendChild(app.canvas);
+
+    // Create borders
+    const leftBorder = new PIXI.Graphics()
+      .beginFill('#000')
+      .drawRect(0, 0, config.borderWidth, config.screenHeight)
+      .endFill()
+
+    const rightBorder = new PIXI.Graphics()
+      .beginFill('#000')
+      .drawRect(config.screenWidth - config.borderWidth, 0, config.borderWidth, config.screenHeight)
+      .endFill()
+
+    const topBorder = new PIXI.Graphics()
+      .beginFill('#000')
+      .drawRect(0, 0, config.screenWidth, config.borderWidth)
+      .endFill()
+
+    const bottomBorder = new PIXI.Graphics()
+      .beginFill('#000')
+      .drawRect(0, config.screenHeight - config.borderWidth, config.screenWidth, config.borderWidth)
+      .endFill()
+
+    // Add borders to stage
+    app.stage.addChild(leftBorder);
+    app.stage.addChild(rightBorder);
+    app.stage.addChild(topBorder);
+    app.stage.addChild(bottomBorder);
+
+    const circle = new PIXI.Graphics()
+      .beginFill('#f5ef42')
+      .drawCircle(config.circleSize / 2, config.circleSize / 2, config.circleSize / 2)
+      .endFill()
+
+    circle.x = config.screenWidth / 2;
+    circle.y = config.screenHeight / 2;
+
+    // Starting velocity is between -1 and 1
+    let xv = Math.random() * 2 - 1;
+    let yv = Math.random() * 2 - 1;
+
+    app.stage.addChild(circle)
+
+    // Keeps track of how many seconds have passed
+    let seconds = 0;
+    setInterval(() => {
+      seconds++;
+    }, 1000)
+
+    const gameOver = () => {
+      xv = 0;
+      yv = 0;
+      alert(`All borders have been hit! It took ${seconds} seconds!`);
+    }
+
+    const borderHitStatus = {
+      top: false,
+      bottom: false,
+      left: false,
+      right: false
+    }
+
+    const GameManager = new Promise((resolve, reject) => {
+      (function checkForGameOver() {
+        // If all 4 borders have been hit, end the game
+        if (borderHitStatus.bottom && borderHitStatus.top && borderHitStatus.left && borderHitStatus.right) {
+          resolve(gameOver());
+        } else {
+          setTimeout(checkForGameOver, 50);
+        }
+      })()
+    })
+
+    app.ticker.add(() => {
+      // Checks if the border has been hit by taking the screen width, circle size, and width of the border into account
+      if (circle.x >= config.screenWidth - config.circleSize - config.borderWidth) {
+        if (!borderHitStatus.right) {
+          rightBorder.beginFill('#f5ef42').drawRect(config.screenWidth - config.borderWidth, 0, config.borderWidth, config.screenHeight).endFill()
+          borderHitStatus.right = true;
+        }
+        xv = -xv
+      }
+
+      if (circle.x <= config.borderWidth) {
+        if (!borderHitStatus.left) {
+          leftBorder.beginFill('#f5ef42').drawRect(0, 0, config.borderWidth, config.screenHeight).endFill()
+          borderHitStatus.left = true;
+        }
+        xv = -xv
+      }
+
+      if (circle.y >= config.screenHeight - config.circleSize - config.borderWidth) {
+        if (!borderHitStatus.bottom) {
+          bottomBorder.beginFill('#f5ef42').drawRect(0, config.screenHeight - config.borderWidth, config.screenWidth, config.borderWidth).endFill()
+          borderHitStatus.bottom = true;
+        }
+        yv = -yv
+      }
+
+      if (circle.y <= config.borderWidth) {
+        if (!borderHitStatus.top) {
+          topBorder.beginFill('#f5ef42').drawRect(0, 0, config.screenWidth, config.borderWidth).endFill()
+          borderHitStatus.top = true;
+        }
+        yv = -yv
+      }
+
+      circle.x += xv
+      circle.y += yv
+    })
+  </script>
+</body>
+
+</html>
